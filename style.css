@@ -1,0 +1,124 @@
+:root{
+  --square-size: 100px; /* change to 200px or 300px for bigger board */
+  --light-wood: #d6b38a; /* light wooden color */
+  --dark-wood:  #7a4f28; /* dark wooden color */
+  --line-color:  #000000; /* black separators */
+  --line-thickness: 4px; /* bold line between squares */
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: #efe9df;
+  padding:20px;
+}
+
+#board{
+  --s: var(--square-size);
+  width: calc(var(--s) * 8);
+  height: calc(var(--s) * 8);
+  display: grid;
+  grid-template-columns: repeat(8, var(--s));
+  grid-template-rows: repeat(8, var(--s));
+  position: relative;
+  /* checkerboard using two layered gradients and repeating background-size */
+  background-image:
+    linear-gradient(90deg, var(--light-wood) 50%, var(--dark-wood) 50%),
+    linear-gradient(var(--light-wood) 50%, var(--dark-wood) 50%);
+  background-size: calc(var(--s) * 2) calc(var(--s) * 2);
+  border: calc(var(--line-thickness)) solid var(--line-color); /* outer border */
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  overflow: visible;
+}
+
+/* Bold black grid lines between squares using an overlay pseudo-element */
+#board::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  /* vertical and horizontal lines that repeat every square */
+  background-image:
+    linear-gradient(to right, var(--line-color) var(--line-thickness), transparent var(--line-thickness)),
+    linear-gradient(to bottom, var(--line-color) var(--line-thickness), transparent var(--line-thickness));
+  background-size: var(--s) var(--s);
+}
+
+/* make each piece container fill its grid cell and center its image */
+#board > div{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  z-index: 2; /* above the grid lines */
+  position: relative;
+}
+
+#board > div img{
+  max-width: calc(var(--s) - 16px);
+  max-height: calc(var(--s) - 16px);
+  width: auto;
+  height: auto;
+  display:block;
+  user-select:none;
+  pointer-events:none;
+}
+
+/* --- Positioning pieces by child order in the HTML --- */
+/* White pawns: first 8 children -> row 7 (from column 1 to 8) */
+#board > div:nth-child(1) { grid-column: 1; grid-row: 7; }
+#board > div:nth-child(2) { grid-column: 2; grid-row: 7; }
+#board > div:nth-child(3) { grid-column: 3; grid-row: 7; }
+#board > div:nth-child(4) { grid-column: 4; grid-row: 7; }
+#board > div:nth-child(5) { grid-column: 5; grid-row: 7; }
+#board > div:nth-child(6) { grid-column: 6; grid-row: 7; }
+#board > div:nth-child(7) { grid-column: 7; grid-row: 7; }
+#board > div:nth-child(8) { grid-column: 8; grid-row: 7; }
+
+/* White back rank: children 9..16 -> row 8 (a1..h1) */
+#board > div:nth-child(9)  { grid-column: 1; grid-row: 8; }
+#board > div:nth-child(10) { grid-column: 2; grid-row: 8; }
+#board > div:nth-child(11) { grid-column: 3; grid-row: 8; }
+#board > div:nth-child(12) { grid-column: 4; grid-row: 8; }
+#board > div:nth-child(13) { grid-column: 5; grid-row: 8; }
+#board > div:nth-child(14) { grid-column: 6; grid-row: 8; }
+#board > div:nth-child(15) { grid-column: 7; grid-row: 8; }
+#board > div:nth-child(16) { grid-column: 8; grid-row: 8; }
+
+/* Black pawns: children 17..24 -> row 2 (a7..h7 from white's perspective) */
+#board > div:nth-child(17) { grid-column: 1; grid-row: 2; }
+#board > div:nth-child(18) { grid-column: 2; grid-row: 2; }
+#board > div:nth-child(19) { grid-column: 3; grid-row: 2; }
+#board > div:nth-child(20) { grid-column: 4; grid-row: 2; }
+#board > div:nth-child(21) { grid-column: 5; grid-row: 2; }
+#board > div:nth-child(22) { grid-column: 6; grid-row: 2; }
+#board > div:nth-child(23) { grid-column: 7; grid-row: 2; }
+#board > div:nth-child(24) { grid-column: 8; grid-row: 2; }
+
+/* Black back rank: children 25..32 -> row 1 (a8..h8) */
+#board > div:nth-child(25) { grid-column: 1; grid-row: 1; }
+#board > div:nth-child(26) { grid-column: 2; grid-row: 1; }
+#board > div:nth-child(27) { grid-column: 3; grid-row: 1; }
+#board > div:nth-child(28) { grid-column: 4; grid-row: 1; }
+#board > div:nth-child(29) { grid-column: 5; grid-row: 1; }
+#board > div:nth-child(30) { grid-column: 6; grid-row: 1; }
+#board > div:nth-child(31) { grid-column: 7; grid-row: 1; }
+#board > div:nth-child(32) { grid-column: 8; grid-row: 1; }
+
+/* Accessibility / small tweaks */
+#board > div img{ image-rendering: -webkit-optimize-contrast; }
+
+/* Quick helpers: change board size by setting a class on body: .big or .huge */
+body.big  { --square-size: 200px; }
+body.huge { --square-size: 300px; }
+
+/* If your page needs to be responsive, scale board on small viewports */
+@media (max-width: 900px){
+  /* scale the board down proportionally to fit */
+  #board{ transform-origin: top left; transform: scale(0.75); }
+}
