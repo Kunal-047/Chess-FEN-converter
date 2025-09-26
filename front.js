@@ -96,5 +96,5 @@ function pieceOnSquare(square) {
 }
 
 // Example usage:
-const startFEN = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR';
+const startFEN = '2r4k/p4bR1/4pq2/1p1p1n2/5P2/P2B4/1P2Q2P/1K4R1';
 renderFEN(startFEN);
