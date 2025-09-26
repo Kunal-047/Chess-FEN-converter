@@ -1,100 +1,117 @@
-function pieceImageFor(letter) {
-  // Map FEN letter -> filename piece type
-  const map = {
-    p: 'pawn',
-    r: 'rook',
-    n: 'knight',
-    b: 'bishop',
-    q: 'queen',
-    k: 'king'
-  };
-  const lower = letter.toLowerCase();
-  const type = map[lower];
-  if (!type) return null;
-  const color = letter === lower ? 'black' : 'white';
-  return `pieces/${color}-${type}.png`;
+let pawns = [];
+for (let i = 1; i <= 8; i++) {
+    pawns.push(document.getElementById(`p${i}`));
+}
+let wpawns = [];
+for (let i = 1; i <= 8; i++) {
+    wpawns.push(document.getElementById(`P${i}`));
 }
 
-function fileIndexToCol(fileIndex) {
-  // fileIndex 0..7 -> grid column 1..8
-  return fileIndex + 1;
-}
-function rankToGridRow(rank) {
-  // gridRow = 9 - rank
-  return 9 - rank;
-}
+// Black pieces
+let r1 = document.getElementById('r1');
+let r2 = document.getElementById('r2');
+let n1 = document.getElementById('n1');
+let n2 = document.getElementById('n2');
+let b1 = document.getElementById('b1');
+let b2 = document.getElementById('b2');
+let q  = document.getElementById('q');
+let k  = document.getElementById('k');
 
-function renderFEN(fen) {
-  if (typeof fen !== 'string') throw new Error('FEN must be a string');
-  const board = document.getElementById('board');
-  if (!board) throw new Error('No element with id="board" found');
+// White pieces
+let R1 = document.getElementById('R1');
+let R2 = document.getElementById('R2');
+let N1 = document.getElementById('N1');
+let N2 = document.getElementById('N2');
+let B1 = document.getElementById('B1');
+let B2 = document.getElementById('B2');
+let Q  = document.getElementById('Q');
+let K  = document.getElementById('K');
 
-  // take only the piece placement field (first token)
-  const parts = fen.trim().split(/\s+/);
-  if (!parts[0]) throw new Error('Invalid FEN');
-  const placement = parts[0];
-  const ranks = placement.split('/');
-  if (ranks.length !== 8) throw new Error('FEN must have 8 ranks');
+function fenToDict(fen) {
+    const [position] = fen.split(" "); // only need the piece placement part
+    const rows = position.split("/");
+    const files = ["a","b","c","d","e","f","g","h"];
+    const dict = {};
 
-  // clear existing pieces
-  board.innerHTML = '';
+    for (let rank = 8; rank >= 1; rank--) {
+        const row = rows[8 - rank]; // rows go from 8 -> 1
+        let fileIndex = 0;
 
-  for (let i = 0; i < 8; ++i) {
-    const rankStr = ranks[i]; // this is rank starting from 8 down to 1
-    const rankNumber = 8 - i; // i=0 -> rank8, i=7 -> rank1
-
-    let file = 0; // file index 0..7 (a..h)
-    for (let chIndex = 0; chIndex < rankStr.length; ++chIndex) {
-      const ch = rankStr[chIndex];
-      if (/\d/.test(ch)) {
-        // digit => skip that many empty squares
-        const skip = parseInt(ch, 10);
-        file += skip;
-        continue;
-      }
-
-      if (file > 7) {
-        console.warn('FEN appears malformed (too many files in rank)', rankStr);
-        break;
-      }
-
-      // create a piece element
-      const imgSrc = pieceImageFor(ch);
-      const pieceDiv = document.createElement('div');
-      pieceDiv.className = 'piece';
-      pieceDiv.setAttribute('data-piece', ch); // 'P','k','r' etc.
-
-      // compute algebraic square name (optional helper)
-      const fileLetter = String.fromCharCode('a'.charCodeAt(0) + file);
-      const squareName = fileLetter + rankNumber;
-      pieceDiv.setAttribute('data-square', squareName);
-
-      // place using CSS Grid coordinates
-      pieceDiv.style.gridColumnStart = String(fileIndexToCol(file));
-      pieceDiv.style.gridRowStart = String(rankToGridRow(rankNumber));
-
-      // image
-      if (imgSrc) {
-        const img = document.createElement('img');
-        img.src = imgSrc;
-        img.alt = ch;
-        pieceDiv.appendChild(img);
-      } else {
-        pieceDiv.textContent = ch;
-      }
-
-      board.appendChild(pieceDiv);
-      file += 1;
+        for (const char of row) {
+            if (isNaN(char)) {
+                // It's a piece
+                const square = files[fileIndex] + rank;
+                if (!dict[char]) dict[char] = [];
+                dict[char].push(square);
+                fileIndex++;
+            } else {
+                fileIndex += parseInt(char, 10);
+            }
+        }
     }
-    if (file !== 8) {}
-  }
+    return dict;
 }
 
-// convenience: find piece on a square (algebraic like 'e4')
-function pieceOnSquare(square) {
-  return document.querySelector(`#board > .piece[data-square="${square}"]`);
+function placePiecesFromFen(fen) {
+    const dict = fenToDict(fen);
+    const pieceMap = {
+        'p': pawns,
+        'P': wpawns,
+        'r': [r1, r2],
+        'R': [R1, R2],
+        'n': [n1, n2],
+        'N': [N1, N2],
+        'b': [b1, b2],
+        'B': [B1, B2],
+        'q': [q],
+        'Q': [Q],
+        'k': [k],
+        'K': [K]
+    };
+
+    function hideAllPieces() {
+        const allElements = [].concat(
+            pawns, wpawns,
+            [r1, r2, n1, n2, b1, b2, q, k, R1, R2, N1, N2, B1, B2, Q, K]
+        );
+        allElements.forEach(el => {
+            if (el) {
+                el.style.display = 'none';
+            }
+        });
+    }
+    hideAllPieces();
+
+    function placeElementOnSquare(el, square) {
+        if (!el || !square || square.length < 2) return;
+        const file = square[0];
+        const rank = square.slice(1);
+        el.style.left = `var(--file-${file})`;
+        el.style.top  = `var(--rank-${rank})`;
+        el.style.display = '';
+    }
+
+    for (const pieceChar in pieceMap) {
+        const domRef = pieceMap[pieceChar];
+        const positions = dict[pieceChar] || [];
+        const domArray = Array.isArray(domRef) ? domRef : [domRef];
+
+        positions.forEach((square, idx) => {
+            const el = domArray[idx];
+            if (el) {
+                placeElementOnSquare(el, square);
+            } else {
+                console.warn(`No DOM element available to place piece ${pieceChar} at ${square} (index ${idx}).`);
+            }
+        });
+
+        domArray.forEach((el, idx) => {
+            if (!positions[idx] && el) {
+                el.style.display = 'none';
+            }
+        });
+    }
 }
 
-// Example usage:
-const startFEN = '2r4k/p4bR1/4pq2/1p1p1n2/5P2/P2B4/1P2Q2P/1K4R1';
-renderFEN(startFEN);
+const startFen = "rn1qk2r/ppp2ppp/3B1n2/3p4/3P4/2N2N2/PPQ1PPPP/R3KB1R b KQkq - 0 7";
+placePiecesFromFen(startFen);
